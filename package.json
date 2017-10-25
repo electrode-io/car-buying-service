@@ -1,0 +1,17 @@
+{
+  "name": "car-buying-service",
+  "version": "1.0.0",
+  "description": "A sample service to maintain transaction and vehicle records",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test",
+    "start": "node index.js"
+  },
+  "keywords": ["electrode"],
+  "author": "animesh10",
+  "license": "ISC",
+  "dependencies": {
+    "hapi": "^16.6.2",
+    "nodemon": "^1.12.1"
+  }
+}
