@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "hapi": "^16.6.2",
+    "inert": "^4.2.1",
     "lodash": "^4.17.4",
     "nodemon": "^1.12.1"
   }

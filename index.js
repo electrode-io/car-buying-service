@@ -1,6 +1,7 @@
 "use strict";
 
 const Hapi = require("hapi");
+const Inert = require("inert");
 const fs = require("fs");
 const path = require("path");
 const _ = require("lodash");
@@ -9,11 +10,29 @@ const HTTP_CREATED = 201;
 const server = new Hapi.Server();
 server.connection({ port: 8000, host: "localhost" });
 
+server.register(
+  {
+    register: require("inert")
+  },
+  function(err) {
+    if (err) throw err;
+
+    server.start(err => {
+      if (err) {
+        throw err;
+      }
+      console.log(`Server running at: ${server.info.uri}`);
+    });
+  }
+);
+
 server.route({
   method: "GET",
-  path: "/",
-  handler: function(request, reply) {
-    reply("Hello, world!");
+  path: "/images/{param*}",
+  handler: {
+    directory: {
+      path: "images"
+    }
   }
 });
 
@@ -134,11 +153,4 @@ server.route({
       }
     });
   }
-});
-
-server.start(err => {
-  if (err) {
-    throw err;
-  }
-  console.log(`Server running at: ${server.info.uri}`);
 });
