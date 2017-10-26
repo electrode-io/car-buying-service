@@ -3,6 +3,8 @@
 const Hapi = require("hapi");
 const fs = require("fs");
 const path = require("path");
+const _ = require("lodash");
+const HTTP_CREATED = 201;
 
 const server = new Hapi.Server();
 server.connection({ port: 8000, host: "localhost" });
@@ -94,39 +96,8 @@ server.route({
 });
 
 server.route({
-  method: "PUT",
-  path: "/update-transaction",
-  handler: (request, reply) => {
-    fs.readFile(path.resolve("data", "transactions.json"), "utf8", (readErr, data) => {
-      if (readErr) {
-        console.log("Transactions READ ERROR");
-        return reply("Transactions UPDATE ERROR");
-      }
-      const parsedData = JSON.parse(data);
-      const found = _.find(parsedData, { id: request.payload.id });
-      if (!_.isEmpty(found)) {
-        fs.writeFile(
-          path.join(process.cwd(), "data/transactions.json"),
-          JSON.stringify(parsedData),
-          "utf-8",
-          writeErr => {
-            if (writeErr) {
-              return reply("Write Error").code(HTTP_ISE);
-            } else {
-              return reply("created").code(HTTP_CREATED);
-            }
-          }
-        );
-      } else {
-        return reply("error").code(HTTP_CREATED);
-      }
-    });
-  }
-});
-
-server.route({
-  method: "PUT",
-  path: "/update-negotiation",
+  method: "POST",
+  path: "/transactions",
   handler: (request, reply) => {
     fs.readFile(path.resolve("data", "transactions.json"), "utf8", (readErr, data) => {
       if (readErr) {
@@ -135,7 +106,7 @@ server.route({
       }
       const parsedData = JSON.parse(data);
       const found = _.find(parsedData, {
-        id: request.payload.id,
+        id: parseInt(request.payload.id),
         status: "NEGOTIATION"
       });
 
@@ -159,7 +130,7 @@ server.route({
           }
         );
       } else {
-        return reply("error").code(HTTP_CREATED);
+        return reply("NOT FOUND").code(HTTP_CREATED);
       }
     });
   }

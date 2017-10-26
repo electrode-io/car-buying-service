@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "test": "npm test",
-    "start": "node index.js"
+    "start": "nodemon index.js"
   },
-  "keywords": ["electrode"],
+  "keywords": [
+    "electrode"
+  ],
   "author": "animesh10",
   "license": "ISC",
   "dependencies": {
     "hapi": "^16.6.2",
+    "lodash": "^4.17.4",
     "nodemon": "^1.12.1"
   }
 }
