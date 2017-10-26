@@ -97,7 +97,7 @@ server.route({
 
 server.route({
   method: "POST",
-  path: "/transactions",
+  path: "/update-transaction",
   handler: (request, reply) => {
     fs.readFile(path.resolve("data", "transactions.json"), "utf8", (readErr, data) => {
       if (readErr) {
