@@ -35,6 +35,13 @@ server.route({
     }
   }
 });
+server.route({
+  method: "GET",
+  path: "/",
+  handler: function(request, reply) {
+    reply("Hello! from the car-buying-service.\n");
+  }
+});
 
 server.route({
   method: "GET",
