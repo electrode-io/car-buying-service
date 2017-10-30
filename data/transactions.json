@@ -72,7 +72,7 @@
     "id": 1508798182547
   },
   {
-    "customer_id": "1",
+    "customer_id": 1,
     "vin_number": "1FUBABA813LK92792",
     "actual_price": "123123",
     "status": "NEGOTIATION",

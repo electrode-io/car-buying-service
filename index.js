@@ -103,6 +103,7 @@ server.route({
       const parsedData = JSON.parse(data);
       const payload = request.payload;
       payload.id = Date.now();
+      payload.customer_id = parseInt(payload.customer_id);
       parsedData.push(payload);
 
       fs.writeFile(
