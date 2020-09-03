@@ -1,137 +1,105 @@
 "use strict";
 
-const Hapi = require("hapi");
-const Inert = require("inert");
-const fs = require("fs");
+const Hapi = require("@hapi/hapi");
+const { readFile, writeFile } = require('fs').promises;
 const path = require("path");
 const _ = require("lodash");
 const HTTP_CREATED = 201;
 
-const server = new Hapi.Server();
-server.connection({ port: 8000, host: "localhost" });
+const server = new Hapi.Server({ port: 8000, host: "localhost" });
 
-server.register(
-  {
-    register: require("inert")
-  },
-  function(err) {
-    if (err) throw err;
-
-    server.start(err => {
-      if (err) {
-        throw err;
-      }
-      console.log(`Server running at: ${server.info.uri}`);
-    });
-  }
-);
-
-server.route({
-  method: "GET",
-  path: "/images/{param*}",
-  handler: {
-    directory: {
-      path: "images"
-    }
-  }
-});
 server.route({
   method: "GET",
   path: "/",
-  handler: function(request, reply) {
-    reply("Hello! from the car-buying-service.\n");
+  handler: (request, h) => {
+    return "Hello! from the car-buying-service.\n";
   }
 });
 
 server.route({
   method: "GET",
   path: "/vehicles",
-  handler: (request, reply) => {
-    fs.readFile(path.resolve("data", "vehicles.json"), "utf8", (err, data) => {
-      if (err) {
-        console.log("Vehicles READ ERROR");
-        return reply("Vehicles READ ERROR").code(500);
-      }
-      return reply(JSON.parse(data));
-    });
+  handler: async (request, h) => {
+    try {
+      const vehicles = await readFile(path.resolve("data", "vehicles.json"), 'utf8');
+      return h.response(JSON.parse(vehicles));
+    } catch (error) {
+      console.log("Vehicles READ ERROR");
+      return h.response('Vehicles READ ERROR').code(500);
+    }
   }
 });
 
 server.route({
   method: "GET",
   path: "/transactions",
-  handler: (request, reply) => {
-    fs.readFile(path.resolve("data", "transactions.json"), "utf8", (err, data) => {
-      if (err) {
-        console.log("Transactions READ ERROR");
-        return reply();
-      }
-      return reply(JSON.parse(data));
-    });
+  handler: async (request, h) => {
+    try {
+      const transactions = await readFile(path.resolve("data", "transactions.json"), 'utf8');
+      return h.response(JSON.parse(transactions))
+    } catch (error) {
+      console.log("Transactions READ ERROR");
+      return h.response('').code(500);
+    }
   }
 });
 
 server.route({
   method: "GET",
   path: "/get-negotiations",
-  handler: (request, reply) => {
-    fs.readFile(path.resolve("data", "transactions.json"), "utf8", (err, data) => {
-      if (err) {
-        console.log("Transactions READ ERROR");
-        return reply();
-      }
-      const parsedData = JSON.parse(data);
+  handler: async (request, h) => {
+    try {
+      const transactions = await readFile(path.resolve("data", "transactions.json"), 'utf8');
+      const parsedData = JSON.parse(transactions);
       const found = _.filter(parsedData, { status: "NEGOTIATION" });
       if (!_.isEmpty(found)) {
-        return reply(found);
+        return found;
       } else {
-        return reply();
+        return '';
       }
-    });
+    } catch (error) {
+      console.log("Transactions READ ERROR");
+      return h.response('').code(500);
+    }
   }
 });
 
 server.route({
   method: "POST",
   path: "/create-transaction",
-  handler: (request, reply) => {
-    fs.readFile(path.resolve("data", "transactions.json"), "utf8", (readErr, data) => {
-      if (readErr) {
-        console.log("Transactions READ ERROR");
-        return reply("Transactions UPDATE ERROR");
-      }
-      const parsedData = JSON.parse(data);
+  handler: async (request, h) => {
+    let transactions;
+    try {
+      transactions = await readFile(path.resolve("data", "transactions.json"), 'utf8');
+      const parsedData = JSON.parse(transactions);
       const payload = request.payload;
       payload.id = Date.now();
       payload.customer_id = parseInt(payload.customer_id);
       parsedData.push(payload);
-
-      fs.writeFile(
+      await writeFile(
         path.join(process.cwd(), "data/transactions.json"),
-        JSON.stringify(parsedData),
-        "utf-8",
-        writeErr => {
-          if (writeErr) {
-            return reply("Write Error").code(HTTP_ISE);
-          } else {
-            return reply(payload).code(HTTP_CREATED);
-          }
-        }
-      );
-    });
+        JSON.stringify(parsedData, null, 2) + "\n",
+        "utf-8");
+      return h.response(payload).code(HTTP_CREATED);
+    } catch (error) {
+      if (transactions) {
+        return h.response("Write Error").code(500);
+      } else {
+        console.log("Transactions READ ERROR");
+        return "Transactions UPDATE ERROR";
+      }
+    }
   }
 });
 
 server.route({
   method: "POST",
   path: "/update-transaction",
-  handler: (request, reply) => {
-    fs.readFile(path.resolve("data", "transactions.json"), "utf8", (readErr, data) => {
-      if (readErr) {
-        console.log("Transactions READ ERROR");
-        return reply("Transactions UPDATE ERROR");
-      }
-      const parsedData = JSON.parse(data);
+  handler: async (request, h) => {
+    let transactions;
+    try {
+      transactions = await readFile(path.resolve("data", "transactions.json"), 'utf8');
+      const parsedData = JSON.parse(transactions);
       const found = _.find(parsedData, {
         id: parseInt(request.payload.id),
         status: "NEGOTIATION"
@@ -144,21 +112,44 @@ server.route({
         if (request.payload.status) {
           found.status = request.payload.status;
         }
-        fs.writeFile(
+        await writeFile(
           path.join(process.cwd(), "data/transactions.json"),
-          JSON.stringify(parsedData),
-          "utf-8",
-          writeErr => {
-            if (writeErr) {
-              return reply("Write Error").code(HTTP_ISE);
-            } else {
-              return reply(found).code(HTTP_CREATED);
-            }
-          }
-        );
+          JSON.stringify(parsedData, null, 2) + "\n",
+          "utf-8");
+        return h.response(found).code(HTTP_CREATED);
       } else {
-        return reply("NOT FOUND").code(HTTP_CREATED);
+        return h.response("NOT FOUND").code(HTTP_CREATED);
       }
-    });
+    } catch (error) {
+      if (transactions) {
+        return h.response("Write Error").code(500);
+      } else {
+        console.log("Transactions READ ERROR");
+        return "Transactions UPDATE ERROR";
+      }
+    }
   }
 });
+
+const init = async () => {
+  await server.register(require('@hapi/inert'));
+  server.route({
+    method: "GET",
+    path: "/images/{param*}",
+    handler: {
+      directory: {
+        path: "images"
+      }
+    }
+  });
+
+  await server.start();
+  console.log('Server running on %s', server.info.uri);
+};
+
+process.on('unhandledRejection', (err) => {
+  console.log(err);
+  process.exit(1);
+});
+
+init();
