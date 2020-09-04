@@ -4,10 +4,10 @@
   "description": "A sample service to maintain transaction and vehicle records",
   "main": "index.js",
   "scripts": {
-    "test": "npm test",
     "dev": "nodemon index.js",
     "lint": "eslint .",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "lab -v **/*.test.js"
   },
   "keywords": [
     "electrode"
@@ -21,6 +21,8 @@
   },
   "devDependencies": {
     "@fbluemle/eslint-config": "^1.2.4",
+    "@hapi/code": "^8.0.2",
+    "@hapi/lab": "^23.0.0",
     "eslint": "^7.28.0",
     "nodemon": "^2.0.7"
   }
